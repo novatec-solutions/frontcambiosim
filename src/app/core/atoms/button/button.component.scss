@@ -8,9 +8,9 @@
   outline: 1px solid var(--border-color, $red);
   color: var(--color, $white);
   border: none;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 12px 30px;
+  padding: 13px 20px;
   font-weight: 500;
 
   &[disabled] {

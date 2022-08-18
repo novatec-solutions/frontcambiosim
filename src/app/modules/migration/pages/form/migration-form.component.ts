@@ -22,7 +22,7 @@ import { MigrationFormConfig } from './migration-form.config';
 })
 export class MigrationFormComponent {
   migrationForm!: FormGroup;
-  readonly PREFIX_ICCID = '8957101';
+  readonly PREFIX_ICCID = '57101';
 
   get currentPhoneNumber() {
     return this.migrationForm.get("currentPhoneNumber");

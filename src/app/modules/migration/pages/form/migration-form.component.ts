@@ -114,7 +114,11 @@ export class MigrationFormComponent {
 
         this.migrationService.validarCuenta({ min, iccid }).subscribe({
           next: (res: ValidacionCuentaResponse) => {
-            this.processValidationStates(res.response);
+            if(res.error === 0){
+              this.processValidationStates(res.response);
+            }else{
+              this.showDialogError(res.response.description);
+            }  
           },
           complete: () => {
             this.loaderService.hide();
@@ -134,11 +138,6 @@ export class MigrationFormComponent {
       response.iccidStatus === IccidStatus.DEACTIVATED ||
       response.iccidStatus === IccidStatus.LIBRE ){
       this.processValidationFreeState();
-    } else {
-      if(response?.code === '-30'){
-        response.description = MigrationFormConfig.messages.errorChange; 
-      }
-      this.showDialogError(response.description);
     }
   }
 
@@ -170,27 +169,34 @@ export class MigrationFormComponent {
 
     this.migrationService.getCustomerInfoResource({ min }).pipe(
       tap( () => this.loaderService.show() ),
-      map(({ response })=> {
-        if(response?.code === "-10"){
-          throw new Error('Valid token not returned');
+      map( res => {
+        if(res.error === 1){         
+          throw new Error(res.response.description);
         }
-        return response
+        return res.response;     
       }),
       map( item => mapDocumentType(item) ),
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
-      next: accountContacts => {
-        this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
-          state: {
-            info: accountContacts.response.data,
-            documentData,
-            min,
-            iccid
-          }
-        });
+      next: accountContacts => {      
+        if(accountContacts.response.data){
+          this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
+            state: {
+              info: accountContacts.response.data,
+              documentData,
+              min,
+              iccid
+            }
+          });
+        }
+        if(accountContacts.error === 1){         
+          this.showDialogError(accountContacts.response.description);
+        }
       },
-      error: () => this.showDialogError(MigrationFormConfig.messages.errorChange),
+      error: (error) => {
+        this.showDialogError(error.message)
+      },
       complete: () => this.loaderService.hide()
     });
   }
@@ -205,27 +211,35 @@ export class MigrationFormComponent {
     this.showConfirmSimNumberDialog().pipe(
       tap( () => this.loaderService.show() ),
       mergeMap( item => this.migrationService.validatePlanSimResource(item) ),
-      map(({ response })=> {
-        if(response?.code === "-3" || response?.code === "-7"){
-          throw new Error('Valid token not returned');
+      map( res => {
+        if(res.error === 1){         
+          throw new Error(res.response.description);
         }
-        return response
+        return res.response; 
       }),
       map( item => mapDocumentType(item) ),
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
       next: accountContacts => {
-        this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
-          state: {
-            info: accountContacts.response.data,
-            documentData,
-            min,
-            iccid
-          } 
-        });
+        if(accountContacts.response.data){
+          this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
+            state: {
+              info: accountContacts.response.data,
+              documentData,
+              min,
+              iccid
+            } 
+          });
+        }
+
+        if(accountContacts.error === 1){    
+          this.showDialogError(accountContacts.response.description);
+        }
       },
-      error: () => this.showDialogError(MigrationFormConfig.messages.errorChange),
+      error: (error) => {
+        this.showDialogError(error.message)
+      },
       complete: () => this.loaderService.hide()
     });
   }

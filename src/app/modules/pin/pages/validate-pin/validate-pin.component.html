@@ -2,21 +2,22 @@
   <div class="text-box">
     <p class="bold-title">Validar cuenta</p>
     <p>Hemos enviado un PIN de cuatro (4) dígitos al
-      <span *ngIf="contactInfo.contactType=='4'">número de celular</span>
-      <span *ngIf="contactInfo.contactType=='1'">correo</span>
+      <span *ngIf="contactInfo?.contactType=='4'">número de celular</span>
+      <span *ngIf="contactInfo?.contactType=='1'">correo</span>
     </p>
     <div class="red-box mt30">
       <img src="assets/images/{{contactInfo?.contactType=='1'?'mail-red.svg':'tablet-red.svg'}}" />
-      <label class="red-label">{{contactInfo.mask}}</label>
+      <label class="red-label">{{contactInfo?.mask}}</label>
     </div>
   </div>
-  <form [formGroup]="pinForm" (ngSubmit)="validatePin()" novalidate class="content">
+  <form (ngSubmit)="validatePin(pinForm.value)" [formGroup]="pinForm" class="content">
     <p class="pin-text">PIN de seguridad</p>
-    <div class="input-box" max-length-group>
-      <input type="number" mask="0" formControlName="pin1" class="mr20" #num1 maxlength="1" [next]="num2" />
-      <input type="number" mask="0" formControlName="pin2" class="mr20" #num2 maxlength="1" [prev]="num1" [next]="num3" />
-      <input type="number" mask="0" formControlName="pin3" class="mr20" #num3 maxlength="1" [prev]="num2" [next]="num4" />
-      <input type="number" mask="0" formControlName="pin4" #num4 [prev]="num3" maxlength="1" />
+    <div formArrayName="digits" class="box">
+      <input type="number" class="mr20" #inputs maxLength="1"
+      *ngFor="let field of digits.controls; let i = index"  
+      [formControlName]="i" 
+      (keyup)="check(i, field, $event)" 
+      (keydown)="validateKey($event, field)">
     </div>
     <div class="text-center">
       <p class="text">¿No recibiste el PIN de seguridad?</p>

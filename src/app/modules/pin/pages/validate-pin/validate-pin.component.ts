@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { DialogButton } from 'src/app/core/enums/dialog-button.enum';
@@ -19,7 +19,9 @@ import { ValidatePinConfig } from './validate-pin.config';
   templateUrl: './validate-pin.component.html',
   styleUrls: ['./validate-pin.component.scss']
 })
-export class ValidatePinComponent {
+export class ValidatePinComponent implements OnInit {
+  invalidPin: boolean = true;
+  @ViewChildren('inputs') inputs!: QueryList<any>;
   pinForm!: FormGroup;
   public contactInfo!: GenerarPin;
 
@@ -29,16 +31,53 @@ export class ValidatePinComponent {
     public loaderService: LoadingService,
     public migrationService: MigrationService,
     private PinService: PinService) {
+      this.contactInfo = this.router.getCurrentNavigation()?.extras.state as GenerarPin;
+      this.pinForm = this.fb.group({
+        digits: this.fb.array([])
+      });
+    }
 
-    this.contactInfo = this.router.getCurrentNavigation()?.extras.state as GenerarPin;
-
-    this.pinForm = this.fb.group({
-      pin1: ['', [Validators.required]],
-      pin2: ['', [Validators.required]],
-      pin3: ['', [Validators.required]],
-      pin4: ['', [Validators.required]]
-    });
-  }
+    ngOnInit(): void {
+      for (let i = 0; i < 4; i++) {
+        (this.pinForm.get('digits') as FormArray).push(
+          this.fb.control(null)
+        );
+      }
+    }
+  
+    check(index: number, field: { value: string | null; setValue: (arg0: null) => void; }, event: { keyCode: number; }) {
+      this.invalidPin = !this.pinForm.value.digits.includes(null) && field.value !='' ? false : true;
+  
+      if (field.value != null && event.keyCode !== 32) {
+        if (index < (this.inputs.toArray().length - 1) ) {
+          this.inputs.toArray()[index + 1].nativeElement.focus();
+        }
+      }
+      
+      if (event.keyCode === 8) {
+        if (index > 0) {
+          if(field.value != null){
+            field.setValue(null); 
+          }else{
+            this.inputs.toArray()[index-1].nativeElement.focus();
+          } 
+        }
+      }    
+    }
+  
+    validateKey(e:any, field:any){
+      if((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && 
+      e.keyCode !==8){
+        e.preventDefault();
+      }
+      if((field.value !== null && e.keyCode !==8)){
+        e.preventDefault();
+      }
+    }
+  
+    get digits(): FormArray {
+      return this.pinForm.get('digits') as FormArray;
+    }
 
   showSuccessDialog(){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
@@ -121,10 +160,11 @@ export class ValidatePinComponent {
     this.migrationService.migrate(data).subscribe({
       next: res => {
         console.warn(res.response);
-        if(res.response.code === "-12" ){
-          throw new Error('Valid token not returned');
-        }
-        this.showSuccessDialog();
+        if(res.error === 0){
+          this.showSuccessDialog();
+        }else{
+          this.showDialogError(res.response.description);
+        }        
       },
       error: () => {
         this.loaderService.hide();
@@ -155,7 +195,7 @@ export class ValidatePinComponent {
     });
   }
 
-  validatePin(){
+  validatePin(pin: any){
     this.loaderService.show();
     const form = this.pinForm.getRawValue();
     const pinNumber = Object.values(form).join('');

@@ -105,8 +105,8 @@ export class ValidatePinComponent implements OnInit {
   showIncorrectPinDialog(msg: string){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
       icon: "warn",
-      message: msg,
-      content: ``,
+      message: "Error",
+      content: msg,
       actions: [
         {
           key: DialogButton.CANCEL,

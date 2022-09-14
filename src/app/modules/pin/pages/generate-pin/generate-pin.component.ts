@@ -115,7 +115,9 @@ export class GeneratePinComponent {
         }
       ]
     });
-    this.bindGenericDialogEvents(dialogInstance);
+    dialogInstance.componentInstance.buttonPressed.subscribe((buttonKey: DialogButton) => {
+      dialogInstance.close();
+    });
   }
 
   bindGenericDialogEvents(dialogInstance: MatDialogRef<DialogComponent, any>){

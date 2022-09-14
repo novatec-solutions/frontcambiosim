@@ -46,7 +46,7 @@ export class ValidatePinComponent implements OnInit {
     }
   
     check(index: number, field: { value: string | null; setValue: (arg0: null) => void; }, event: { keyCode: number; }) {
-      this.invalidPin = !this.pinForm.value.digits.includes(null) && field.value !='' ? false : true;
+      this.invalidPin = !this.pinForm.value.digits.includes(null) ? false : true;
   
       if (field.value != null && event.keyCode !== 32) {
         if (index < (this.inputs.toArray().length - 1) ) {
@@ -102,11 +102,11 @@ export class ValidatePinComponent implements OnInit {
     });
   }
 
-  showIncorrectPinDialog(){
+  showIncorrectPinDialog(msg: string){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
       icon: "warn",
-      message: `El código de seguridad que ingresaste`,
-      content: `no es correcto, intenta nuevamente`,
+      message: msg,
+      content: ``,
       actions: [
         {
           key: DialogButton.CANCEL,
@@ -129,25 +129,11 @@ export class ValidatePinComponent implements OnInit {
   }
 
   generatePin(){
-    this.loaderService.show();
-
+    this.showSuccessGeneratePinDialog();
     const param = {
       ...this.contactInfo
     };
-    this.PinService.generatePin(param).subscribe({
-      next: response => {
-        if(response.error === GeneratePinError.SUCCESS){
-          this.showSuccessGeneratePinDialog();
-          return;
-        }
-        this.showDialogError(ValidatePinConfig.messages.generic);
-      },
-      error: () => {
-        this.loaderService.hide();
-        this.showDialogError(ValidatePinConfig.messages.generic);
-      },
-      complete: () => this.loaderService.hide()
-    });
+    this.PinService.generatePin(param).subscribe({ error : () => {} });
   }
 
   migrate(){
@@ -197,8 +183,7 @@ export class ValidatePinComponent implements OnInit {
 
   validatePin(pin: any){
     this.loaderService.show();
-    const form = this.pinForm.getRawValue();
-    const pinNumber = Object.values(form).join('');
+    const pinNumber = Object.values(pin.digits).join('');
     const { documentClient } = this.contactInfo;
 
     const param = {
@@ -207,16 +192,16 @@ export class ValidatePinComponent implements OnInit {
     };
 
     this.PinService.validatePin(param).subscribe({
-      next: response => {
-        if(response.error === ValidatePinStatus.SUCCESS){
+      next: res => {
+        if(res.error === ValidatePinStatus.SUCCESS){
           this.migrate();
           return;
         }
-        this.showIncorrectPinDialog();
+        this.showIncorrectPinDialog(res.response.description);
       },
-      error : () => {
+      error : (err) => {
         this.loaderService.hide();
-        this.showIncorrectPinDialog();
+        this.showIncorrectPinDialog( err );
       },
       complete: () => this.loaderService.hide()
     });
@@ -244,7 +229,7 @@ export class ValidatePinComponent implements OnInit {
 
   showMessage<T>(info: T){
     return this.dialog.open(DialogComponent, {
-      width: '350px',
+      width: '400px',
       disableClose: true,
       data: info
     });

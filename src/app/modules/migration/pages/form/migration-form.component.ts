@@ -179,11 +179,11 @@ export class MigrationFormComponent {
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
-      next: accountContacts => {      
-        if(accountContacts.response.data){
+      next: accountContacts => {   
+        if(accountContacts.error === 0){
           this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
             state: {
-              info: accountContacts.response.data,
+              info: accountContacts.response,
               documentData,
               min,
               iccid
@@ -222,10 +222,10 @@ export class MigrationFormComponent {
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
       next: accountContacts => {
-        if(accountContacts.response.data){
+        if(accountContacts.response){
           this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
             state: {
-              info: accountContacts.response.data,
+              info: accountContacts.response,
               documentData,
               min,
               iccid

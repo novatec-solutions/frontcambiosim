@@ -3,12 +3,12 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { DialogButton } from 'src/app/core/enums/dialog-button.enum';
+import { DialogButtonTheme } from 'src/app/core/enums/dialog-theme.enum';
 import { ModalDialogConfig } from 'src/app/core/interfaces/modal.config';
 import { DialogComponent } from 'src/app/core/organisms/dialog/dialog.component';
 import { LoadingService } from 'src/app/core/services/loading.service';
 import { TypeContacts } from 'src/app/modules/migration/enums/contact-type.enum';
 import { AccountContactExtras } from 'src/app/modules/migration/interfaces/account-contact.model';
-import { GeneratePinError } from '../../interfaces/generate-pin-response';
 import { PinService } from '../../services/pin.service';
 import { GeneratePinConfig } from './generate-pin.config';
 
@@ -54,7 +54,7 @@ export class GeneratePinComponent {
   }
 
   generatePin(): void {
-    this.loaderService.show();
+    this.showSuccessGeneratePinDialog();
     const formData = this.pinValidationForm.getRawValue();
     const { chooseLineItem: { contact, type } } = formData;
     const data = {
@@ -62,27 +62,17 @@ export class GeneratePinComponent {
       contactData : contact,
       contactType : type
     }
-    this.PinService.generatePin(data).subscribe({
-      next: (response) => {
-        if(response.error === GeneratePinError.SUCCESS){
-          this.router.navigate(['/pin/validate'], {
-            state: {
-              ...data,
-              mask: this.maskLine(contact, type),
-              min: this.contactInfo.min,
-              iccid: this.contactInfo.iccid
-            }
-          });
-          return;
-        }
-        this.showDialogError(GeneratePinConfig.messages.generic)
-      },
-      error : () => {
-        this.loaderService.hide();
-        this.showDialogError(GeneratePinConfig.messages.generic)
-      },
-      complete: () => this.loaderService.hide()
+
+    this.router.navigate(['/pin/validate'], {
+      state: {
+        ...data,
+        mask: this.maskLine(contact, type),
+        min: this.contactInfo.min,
+        iccid: this.contactInfo.iccid
+      }
     });
+
+    this.PinService.generatePin(data).subscribe({ error : () => {} });
   }
 
   private maskEmail(email: string): string {
@@ -107,6 +97,23 @@ export class GeneratePinComponent {
       message: `Error`,
       content,
       actions: GeneratePinConfig.modals.genericError.actions
+    });
+    this.bindGenericDialogEvents(dialogInstance);
+  }
+
+  showSuccessGeneratePinDialog(){
+    const dialogInstance = this.showMessage<ModalDialogConfig>({
+      icon: "simok",
+      message: `<span>Pin Generado satisfactoriamente</span>`,
+      content: `Pin Generado`,
+      actions: [
+        {
+          key: DialogButton.CONFIRM,
+          color: DialogButtonTheme.PRIMARY,
+          label: 'Aceptar',
+          type: 'button'
+        }
+      ]
     });
     this.bindGenericDialogEvents(dialogInstance);
   }

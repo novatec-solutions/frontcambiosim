@@ -8,7 +8,6 @@ import { ModalDialogConfig } from 'src/app/core/interfaces/modal.config';
 import { DialogComponent } from 'src/app/core/organisms/dialog/dialog.component';
 import { LoadingService } from 'src/app/core/services/loading.service';
 import { MigrationService } from 'src/app/modules/migration/services/migration.service';
-import { GeneratePinError } from '../../interfaces/generate-pin-response';
 import { GenerarPin } from '../../interfaces/generate-pin.model';
 import { ValidatePinStatus } from '../../interfaces/validate-pin.model';
 import { PinService } from '../../services/pin.service';
@@ -124,24 +123,40 @@ export class ValidatePinComponent implements OnInit {
     });
 
     dialogInstance.componentInstance.buttonPressed.subscribe((buttonKey: DialogButton) => {
+      if(buttonKey == 'confirm'){
+        this.generateNewPin();
+      }
       dialogInstance.close();
     });
   }
 
-  generatePin(){
+  generateNewPin(){
     this.showSuccessGeneratePinDialog();
+    this.pinForm.reset({digits: this.fb.array([])});
+    this.invalidPin = true;
+    const { documentClient } = this.contactInfo;
+
+    
+
     const param = {
       ...this.contactInfo
     };
-    this.PinService.generatePin(param).subscribe({ error : () => {} });
+    this.migrationService.accountEvaluate({documentClient: documentClient}).subscribe({
+      next: ()=> {
+        this.PinService.generatePin(param).subscribe({ error : () => {} });
+      },error: () =>{
+        this.showMessage('Se ha presentado un error al hacer la consulta, por favor intenta nuevamente');
+      }
+    });
   }
 
   migrate(){
     this.loaderService.show();
-    const { min, iccid } = this.contactInfo;
+    const { min, iccid, min_b } = this.contactInfo;
     const data = {
       min,
-      iccidNew: iccid
+      iccidNew: iccid,
+      min_b
     };
     this.migrationService.migrate(data).subscribe({
       next: res => {
@@ -150,11 +165,13 @@ export class ValidatePinComponent implements OnInit {
           this.showSuccessDialog();
         }else{
           this.showDialogError(res.response.description);
+          this.pinForm.reset();
         }        
       },
       error: () => {
         this.loaderService.hide();
         this.showDialogError(ValidatePinConfig.messages.iccidChangeError);
+        this.pinForm.reset();
       },
       complete: () => this.loaderService.hide()
     })
@@ -162,9 +179,9 @@ export class ValidatePinComponent implements OnInit {
 
   showSuccessGeneratePinDialog(){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "simok",
-      message: `<span>Pin Generado satisfactoriamente</span>`,
-      content: `Pin Generado`,
+      icon: "check",
+      message: ' ',
+      content: 'Pin Generado satisfactoriamente',
       actions: [
         {
           key: DialogButton.CONFIRM,
@@ -184,34 +201,33 @@ export class ValidatePinComponent implements OnInit {
   validatePin(pin: any){
     this.loaderService.show();
     const pinNumber = Object.values(pin.digits).join('');
-    const { documentClient } = this.contactInfo;
+  
+      const { documentClient } = this.contactInfo;
 
-    const param = {
-      documentClient,
-      pinNumber
-    };
-
-    this.PinService.validatePin(param).subscribe({
-      next: res => {
-        if(res.error === ValidatePinStatus.SUCCESS){
-          this.migrate();
-          return;
-        }
-        this.showIncorrectPinDialog(res.response.description);
-      },
-      error : (err) => {
-        this.loaderService.hide();
-        this.showIncorrectPinDialog( err );
-      },
-      complete: () => this.loaderService.hide()
-    });
-
+      const param = {
+        documentClient,
+        pinNumber
+      };
+      this.PinService.validatePin(param).subscribe({
+        next: res => {
+          if(res.error === ValidatePinStatus.SUCCESS){
+            this.migrate();
+            return;
+          }
+          this.showIncorrectPinDialog(res.response.description);
+        },
+        error : (err) => {
+          this.loaderService.hide();
+          this.showIncorrectPinDialog( err );
+        },
+        complete: () => this.loaderService.hide()
+      });
   }
 
   showDialogError(content: string){
     this.loaderService.hide();
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "check",
+      icon: "warn",
       message: `Error`,
       content,
       actions: ValidatePinConfig.modals.genericError.actions

@@ -68,7 +68,8 @@ export class GeneratePinComponent {
         ...data,
         mask: this.maskLine(contact, type),
         min: this.contactInfo.min,
-        iccid: this.contactInfo.iccid
+        iccid: this.contactInfo.iccid,
+        min_b: this.contactInfo.min_b
       }
     });
 
@@ -87,7 +88,7 @@ export class GeneratePinComponent {
     if(type === TypeContacts.MAIL){
      return this.maskEmail(line);
     }
-    return line[0] + "*".repeat(line.length - 2) + line.slice(-1);
+    return "*".repeat(7) + line.substring(7,line.length);
   }
 
   showDialogError(content: string){
@@ -103,9 +104,9 @@ export class GeneratePinComponent {
 
   showSuccessGeneratePinDialog(){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "simok",
-      message: `<span>Pin Generado satisfactoriamente</span>`,
-      content: `Pin Generado`,
+      icon: "check",
+      message: ' ',
+      content: 'Pin Generado satisfactoriamente',
       actions: [
         {
           key: DialogButton.CONFIRM,

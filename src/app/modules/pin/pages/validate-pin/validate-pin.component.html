@@ -1,12 +1,9 @@
 <div class="container">
   <div class="text-box">
     <p class="bold-title">Validar cuenta</p>
-    <p>Hemos enviado un PIN de cuatro (4) dígitos al
-      <span *ngIf="contactInfo?.contactType=='4'">número de celular</span>
-      <span *ngIf="contactInfo?.contactType=='1'">correo</span>
-    </p>
+    <p>Hemos enviado un PIN de cuatro (4) dígitos al {{contactInfo?.contactType=='1'?'correo':'número de celular'}}</p>
     <div class="red-box mt30">
-      <img src="assets/images/{{contactInfo?.contactType=='1'?'mail-red.svg':'tablet-red.svg'}}" />
+      <img src="assets/claro/{{contactInfo?.contactType=='1'?'email.svg':'phone.svg'}}" />
       <label class="red-label">{{contactInfo?.mask}}</label>
     </div>
   </div>
@@ -21,7 +18,7 @@
     </div>
     <div class="text-center">
       <p class="text">¿No recibiste el PIN de seguridad?</p>
-      <label class="red-text" (click)="generatePin()">
+      <label class="red-text" (click)="generateNewPin()">
         <span>Reenviar</span>
         <div class="content-icon">
           <mat-icon matSuffix class="icon-chevron">chevron_right</mat-icon>
@@ -32,7 +29,7 @@
       <app-button
         class="app-button"
         type="submit"
-        [disabled]="pinForm.invalid">
+        [disabled]="invalidPin">
         Validar
       </app-button>
     </div>

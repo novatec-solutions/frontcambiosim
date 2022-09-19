@@ -4,7 +4,7 @@
   $form: &;
 
   &__title {
-    font-size: 24px;
+    font-size: 16px;
     color: #5E5E5E;
     display: flex;
     justify-content: center;
@@ -14,23 +14,24 @@
 
   &__subtitle {
     p {
-      font-size: 18px;
+      font-size: 16px;
       color: #5E5E5E;
     }
   }
 
   &__foot {
-    $padding-top: 2rem;
+    $padding-top: 4rem;
 
-    @include icon-size(40px);
+    @include icon-size(60px);
     display: flex;
     align-items: center;
     gap: 1rem;
     color: #5E5E5E;
     justify-content: center;
-    font-size: 18px;
-    padding: $padding-top 0;
+    font-size: 16px;
+    padding: $padding-top 0 0;
     position: relative;
+    text-align: left;
 
     &::before {
       content: "";
@@ -38,7 +39,7 @@
       position: absolute;
       width: 300px;
       height: 1px;
-      top: $padding-top - 0.2rem;
+      top: 2rem;
     }
   }
 

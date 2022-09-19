@@ -179,7 +179,7 @@ export class MigrationFormComponent {
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
-      next: accountContacts => {   
+      next: accountContacts => {  
         if(accountContacts.error === 0){
           this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
             state: {
@@ -203,6 +203,7 @@ export class MigrationFormComponent {
 
   processValidationAssignedState(){
     let documentData = "";
+    let min_b = "";
     const {
       currentPhoneNumber: min,
       serialSimlastNumbers: iccid,
@@ -210,6 +211,7 @@ export class MigrationFormComponent {
 
     this.showConfirmSimNumberDialog().pipe(
       tap( () => this.loaderService.show() ),
+      tap( (item) => min_b = item.min_b ),
       mergeMap( item => this.migrationService.validatePlanSimResource(item) ),
       map( res => {
         if(res.error === 1){         
@@ -228,6 +230,7 @@ export class MigrationFormComponent {
               info: accountContacts.response,
               documentData,
               min,
+              min_b,
               iccid
             } 
           });

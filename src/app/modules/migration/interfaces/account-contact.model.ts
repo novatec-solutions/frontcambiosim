@@ -18,4 +18,5 @@ export interface AccountContactExtras {
   documentData: string;
   min?: string;
   iccid?: string;
+  min_b?:string;
 }

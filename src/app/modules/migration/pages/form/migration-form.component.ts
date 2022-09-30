@@ -137,7 +137,8 @@ export class MigrationFormComponent {
       response.iccidStatus === IccidStatus.FREE ||
       response.iccidStatus === IccidStatus.DEACTIVATED ||
       response.iccidStatus === IccidStatus.LIBRE ){
-      this.processValidationFreeState();
+      // this.processValidationFreeState();
+      this.processValidationAssignedState();
     }
   }
 

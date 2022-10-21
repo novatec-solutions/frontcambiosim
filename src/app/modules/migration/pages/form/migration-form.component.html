@@ -2,10 +2,9 @@
   <form class="text-box migration-form" [formGroup]="migrationForm" (ngSubmit)="continueToNextStep()">
 
     <div class="migration-form__fieldset">
-      <h4 class="migration-form__title">
-        Para pasar tu red 3G a 4G debes tener a la mano tu SIM 4G que adquiriste.
-      </h4>
+      <h4 class="migration-form__title">Pásate a 4G</h4>
       <div class="migration-form__subtitle">
+        <p>Para pasar tu red 3G a 4G debes tener a la mano tu SIM 4G que adquiriste</p>
         <p>
           <a routerLink="/migration/help">¿Todavía no tienes una? Aquí te explicamos</a>
         </p>
@@ -13,7 +12,7 @@
       <div class="migration-form__control" [ngClass]="{
         'control-error' : currentPhoneNumber?.errors?.['pattern'] || false
       }">
-        <label for="">Número de celular actual *</label>
+        <label>Número de celular actual *</label>
         <input
           type="text"
           mask="0000000000"
@@ -23,31 +22,27 @@
             Campo obligatorio, debe iniciar en 3 y contener 10 dígitos
           </span>
       </div>
-    </div>
 
-    <div class="migration-form__fieldset">
-      <h4 class="migration-form__title">
+      <div class="migration-form__subtitle form-flex">
         <mat-icon svgIcon="simcard"></mat-icon>
-        <span>Número de serial de la SIM 4G</span>
-      </h4>
-      <div class="migration-form__subtitle">
-        <p>Para continuar, confirma la siguiente información de tu <span>SIM Card 4G.</span></p>
+        <p>Número de serial de la SIM 4G</p>
       </div>
-
+      <p *ngIf="!currentPhoneNumber?.errors">Para continuar, confirma la siguiente información de tu <span>SIM Card 4G.</span></p>
+      
       <div class="migration-form__control" [ngClass]="{
         'control-error' : serialSimlastNumbers?.errors?.['pattern'] || false
       }">
         <label for="">Escribe los últimos 12 dígitos de serie de la SIM 4G:</label>
-        <div class="input-prefix">
+        <div class="width-100 form-flex">
           <strong> 57101 </strong>
           <input
-            type="text"
-            mask="000000000000"
-            formControlName="serialSimlastNumbers">
-            <span *ngIf="serialSimlastNumbers?.errors?.['pattern']">
-              Campo obligatorio, escribe los 12 dígitos del serial ubicados a un logo de Claro 4G sobre la SIM
-            </span>
+          type="text"
+          mask="000000000000"
+          formControlName="serialSimlastNumbers">
         </div>
+          <span *ngIf="serialSimlastNumbers?.errors?.['pattern']">
+            Campo obligatorio, escribe los 12 dígitos del serial ubicados a un logo de Claro 4G sobre la SIM
+          </span>
       </div>
     </div>
 
@@ -57,19 +52,17 @@
       class="migration-form__button">
       Continuar
     </app-button>
-
-    <div class="migration-form__help">
-      <div class="help_links">
-       <p>¿No sabes qué es esto?</p>
-       <p>¿Quieres saber cómo funciona?</p>
-      </div>
-      <app-button
-        class="migration-form__button"
-        type="button"
-        link="/migration/help">
-        Saber más
-      </app-button>
-    </div>
-
   </form>
+  <div class="migration-form__help">
+    <div class="help_links">
+     <p>¿No sabes qué es esto?</p>
+     <p>¿Quieres saber cómo funciona?</p>
+    </div>
+    <app-button
+      class="migration-form__button"
+      type="button"
+      link="/migration/help">
+      Saber más
+    </app-button>
+  </div>
 </div>

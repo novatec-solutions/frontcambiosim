@@ -9,7 +9,7 @@ import { DialogComponent } from 'src/app/core/organisms/dialog/dialog.component'
 import { LoadingService } from 'src/app/core/services/loading.service';
 import { DialogButton } from '../../../../core/enums/dialog-button.enum';
 import { IccidStatus } from '../../enums/iccid-status.enum';
-import { ValidacionCuenta } from '../../interfaces/validacion-cuenta.model';
+import { ValidacionCuenta, ValidacionCuentaResponse } from '../../interfaces/validacion-cuenta.model';
 import { ValidatePlanModel } from '../../interfaces/validate-plan.model';
 import { mapDocumentType } from '../../mapper/document-type.mapper';
 import { MigrationService } from '../../services/migration.service';
@@ -22,6 +22,7 @@ import { MigrationFormConfig } from './migration-form.config';
 })
 export class MigrationFormComponent {
   migrationForm!: FormGroup;
+  readonly PREFIX_ICCID = '8957101';
 
   get currentPhoneNumber() {
     return this.migrationForm.get("currentPhoneNumber");
@@ -29,6 +30,14 @@ export class MigrationFormComponent {
 
   get serialSimlastNumbers() {
     return this.migrationForm.get("serialSimlastNumbers");
+  }
+
+  get formRawValue() {
+    const rawJson = this.migrationForm.getRawValue();
+    return {
+      ...rawJson,
+      serialSimlastNumbers: `${this.PREFIX_ICCID}${rawJson.serialSimlastNumbers}`
+    }
   }
 
   constructor(
@@ -54,7 +63,7 @@ export class MigrationFormComponent {
     const {
       currentPhoneNumber: min,
       serialSimlastNumbers: iccid,
-    } = this.migrationForm.getRawValue();
+    } = this.formRawValue;
 
     return new Observable( observer => {
       const dialogInstance = this.showMessage<ModalDialogConfig>({
@@ -73,8 +82,8 @@ export class MigrationFormComponent {
         dialogInstance.close();
         const formValue = form.getRawValue();
         observer.next({
-          min_b: formValue.SimCard,
           min,
+          min_b: formValue.SimCard,
           iccid
         });
         observer.complete();
@@ -87,7 +96,7 @@ export class MigrationFormComponent {
       const dialogInstance = this.showMessage<ModalDialogConfig>({
         icon: "check",
         message: `Por favor confirma que el serial que ingresaste está <span>correcto.</span>`,
-        content: `${this.serialSimlastNumbers?.value}`,
+        content: `57101${this.serialSimlastNumbers?.value}`,
         actions: MigrationFormConfig.modals.confirmMigration.actions
       });
       this.bindDialogEvents(dialogInstance);
@@ -101,11 +110,15 @@ export class MigrationFormComponent {
         const {
           currentPhoneNumber: min,
           serialSimlastNumbers: iccid,
-        } = this.migrationForm.getRawValue();
+        } = this.formRawValue;
 
         this.migrationService.validarCuenta({ min, iccid }).subscribe({
-          next: (response: ValidacionCuenta) => {
-            this.processValidationStates(response);
+          next: (res: ValidacionCuentaResponse) => {
+            if(res.error === 0){
+              this.processValidationStates(res.response);
+            }else{
+              this.showDialogError(res.response.description);
+            }  
           },
           complete: () => {
             this.loaderService.hide();
@@ -117,21 +130,22 @@ export class MigrationFormComponent {
   }
 
   processValidationStates(response: ValidacionCuenta){
-    if( response.iccidStatus === IccidStatus.ASSIGNED ){
+    if( response.iccidStatus === IccidStatus.ASSIGNED || 
+      response.iccidStatus === IccidStatus.RESERVED){
       this.processValidationAssignedState();
     } else if(
       response.iccidStatus === IccidStatus.FREE ||
-      response.iccidStatus === IccidStatus.DEACTIVATED ){
-      this.processValidationFreeState();
-    } else {
-      this.showDialogError(response.description);
+      response.iccidStatus === IccidStatus.DEACTIVATED ||
+      response.iccidStatus === IccidStatus.LIBRE ){
+      // this.processValidationFreeState();
+      this.processValidationAssignedState();
     }
   }
 
   showDialogError(content: string){
     this.loaderService.hide();
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "check",
+      icon: "warn",
       message: `Error`,
       content,
       actions: MigrationFormConfig.modals.genericError.actions
@@ -152,54 +166,84 @@ export class MigrationFormComponent {
     const {
       currentPhoneNumber: min,
       serialSimlastNumbers: iccid,
-    } = this.migrationForm.getRawValue();
+    } = this.formRawValue;
 
     this.migrationService.getCustomerInfoResource({ min }).pipe(
       tap( () => this.loaderService.show() ),
+      map( res => {
+        if(res.error === 1){         
+          throw new Error(res.response.description);
+        }
+        return res.response;     
+      }),
       map( item => mapDocumentType(item) ),
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
-      next: accountContacts => {
-        this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
-          state: {
-            info: accountContacts.response,
-            documentData,
-            min,
-            iccid
-          }
-        });
+      next: accountContacts => {  
+        if(accountContacts.error === 0){
+          this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
+            state: {
+              info: accountContacts.response,
+              documentData,
+              min,
+              iccid
+            }
+          });
+        }
+        if(accountContacts.error === 1){         
+          this.showDialogError(accountContacts.response.description);
+        }
       },
-      error: () => this.showDialogError(MigrationFormConfig.messages.generic),
+      error: (error) => {
+        this.showDialogError(error.message)
+      },
       complete: () => this.loaderService.hide()
     });
   }
 
   processValidationAssignedState(){
     let documentData = "";
+    let min_b = "";
     const {
       currentPhoneNumber: min,
       serialSimlastNumbers: iccid,
-    } = this.migrationForm.getRawValue();
+    } = this.formRawValue;
 
     this.showConfirmSimNumberDialog().pipe(
       tap( () => this.loaderService.show() ),
+      tap( (item) => min_b = item.min_b ),
       mergeMap( item => this.migrationService.validatePlanSimResource(item) ),
+      map( res => {
+        if(res.error === 1){         
+          throw new Error(res.response.description);
+        }
+        return res.response; 
+      }),
       map( item => mapDocumentType(item) ),
       tap( ({ documentClient }) => documentData = documentClient),
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
       next: accountContacts => {
-        this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
-          state: {
-            info: accountContacts.response,
-            documentData,
-            min,
-            iccid
-          }
-        });
+        if(accountContacts.response){
+          this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
+            state: {
+              info: accountContacts.response,
+              documentData,
+              min,
+              min_b,
+              iccid
+            } 
+          });
+        }
+
+        if(accountContacts.error === 1){    
+          this.showDialogError(accountContacts.response.description);
+        }
       },
-      error: () => this.showDialogError(MigrationFormConfig.messages.generic),
+      error: (error) => {
+        this.showDialogError(error.message)
+      },
       complete: () => this.loaderService.hide()
     });
   }

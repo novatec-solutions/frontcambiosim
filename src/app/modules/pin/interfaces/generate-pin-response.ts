@@ -6,6 +6,6 @@ export enum GeneratePinError {
 export interface GeneratePinResponse {
   error: GeneratePinError;
   response: {
-    pinGeneratorResponse: string;
+    description: string;
   }
 }

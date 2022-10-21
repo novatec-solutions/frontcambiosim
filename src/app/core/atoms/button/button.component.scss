@@ -3,14 +3,15 @@
 .btn {
   width: var(--button-width, 100%);
   max-width:var(--button-max-width, inherit);
-  border-radius: var(--button-radius, 26px);
+  border-radius: var(--button-radius, 10px);
   background-color: var(--primary-color, $red);
   outline: 1px solid var(--border-color, $red);
   color: var(--color, $white);
   border: none;
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
-  padding: 13px 20px;
+  padding: 12px 0px;
+  font-weight: 500;
 
   &[disabled] {
     background: #e2d9d9;

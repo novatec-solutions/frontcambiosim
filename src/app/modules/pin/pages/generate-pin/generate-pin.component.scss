@@ -8,12 +8,6 @@
     font-size: 18px;
   }
 
-  &__list {
-    display: grid;
-    grid-template-columns: repeat(3,1fr);
-    gap: 1.4rem;
-  }
-
   #{$item}__item {
     border-radius: 3px;
     border: 1px solid #757575;
@@ -43,12 +37,14 @@
 
     &-content {
       font-size: 20px;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
   }
 
   &__actions {
-    --button-width: 300px;
+    --button-width: 100%;
     --button-radius: 9px;
     --primary-color: #d9291c;
     --button-max-width: 300px;
@@ -57,4 +53,3 @@
   }
 
 }
-

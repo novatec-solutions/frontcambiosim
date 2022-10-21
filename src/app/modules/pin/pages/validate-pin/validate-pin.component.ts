@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { DialogButton } from 'src/app/core/enums/dialog-button.enum';
@@ -8,7 +8,6 @@ import { ModalDialogConfig } from 'src/app/core/interfaces/modal.config';
 import { DialogComponent } from 'src/app/core/organisms/dialog/dialog.component';
 import { LoadingService } from 'src/app/core/services/loading.service';
 import { MigrationService } from 'src/app/modules/migration/services/migration.service';
-import { GeneratePinError } from '../../interfaces/generate-pin-response';
 import { GenerarPin } from '../../interfaces/generate-pin.model';
 import { ValidatePinStatus } from '../../interfaces/validate-pin.model';
 import { PinService } from '../../services/pin.service';
@@ -19,7 +18,9 @@ import { ValidatePinConfig } from './validate-pin.config';
   templateUrl: './validate-pin.component.html',
   styleUrls: ['./validate-pin.component.scss']
 })
-export class ValidatePinComponent {
+export class ValidatePinComponent implements OnInit {
+  invalidPin: boolean = true;
+  @ViewChildren('inputs') inputs!: QueryList<any>;
   pinForm!: FormGroup;
   public contactInfo!: GenerarPin;
 
@@ -29,16 +30,53 @@ export class ValidatePinComponent {
     public loaderService: LoadingService,
     public migrationService: MigrationService,
     private PinService: PinService) {
+      this.contactInfo = this.router.getCurrentNavigation()?.extras.state as GenerarPin;
+      this.pinForm = this.fb.group({
+        digits: this.fb.array([])
+      });
+    }
 
-    this.contactInfo = this.router.getCurrentNavigation()?.extras.state as GenerarPin;
-
-    this.pinForm = this.fb.group({
-      pin1: ['', [Validators.required]],
-      pin2: ['', [Validators.required]],
-      pin3: ['', [Validators.required]],
-      pin4: ['', [Validators.required]]
-    });
-  }
+    ngOnInit(): void {
+      for (let i = 0; i < 4; i++) {
+        (this.pinForm.get('digits') as FormArray).push(
+          this.fb.control(null)
+        );
+      }
+    }
+  
+    check(index: number, field: { value: string | null; setValue: (arg0: null) => void; }, event: { keyCode: number; }) {
+      this.invalidPin = !this.pinForm.value.digits.includes(null) ? false : true;
+  
+      if (field.value != null && event.keyCode !== 32) {
+        if (index < (this.inputs.toArray().length - 1) ) {
+          this.inputs.toArray()[index + 1].nativeElement.focus();
+        }
+      }
+      
+      if (event.keyCode === 8) {
+        if (index > 0) {
+          if(field.value != null){
+            field.setValue(null); 
+          }else{
+            this.inputs.toArray()[index-1].nativeElement.focus();
+          } 
+        }
+      }    
+    }
+  
+    validateKey(e:any, field:any){
+      if((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105) && 
+      e.keyCode !==8){
+        e.preventDefault();
+      }
+      if((field.value !== null && e.keyCode !==8)){
+        e.preventDefault();
+      }
+    }
+  
+    get digits(): FormArray {
+      return this.pinForm.get('digits') as FormArray;
+    }
 
   showSuccessDialog(){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
@@ -63,11 +101,11 @@ export class ValidatePinComponent {
     });
   }
 
-  showIncorrectPinDialog(){
+  showIncorrectPinDialog(msg: string){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
       icon: "warn",
-      message: `El código de seguridad que ingresaste`,
-      content: `no es correcto, intenta nuevamente`,
+      message: "Error",
+      content: msg,
       actions: [
         {
           key: DialogButton.CANCEL,
@@ -85,50 +123,55 @@ export class ValidatePinComponent {
     });
 
     dialogInstance.componentInstance.buttonPressed.subscribe((buttonKey: DialogButton) => {
+      if(buttonKey == 'confirm'){
+        this.generateNewPin();
+      }
       dialogInstance.close();
     });
   }
 
-  generatePin(){
-    this.loaderService.show();
+  generateNewPin(){
+    this.showSuccessGeneratePinDialog();
+    this.pinForm.reset({digits: this.fb.array([])});
+    this.invalidPin = true;
+    const { documentClient } = this.contactInfo;
+
+    
 
     const param = {
       ...this.contactInfo
     };
-    this.PinService.generatePin(param).subscribe({
-      next: response => {
-        if(response.error === GeneratePinError.SUCCESS){
-          this.showSuccessGeneratePinDialog();
-          return;
-        }
-        this.showDialogError(ValidatePinConfig.messages.generic);
-      },
-      error: () => {
-        this.loaderService.hide();
-        this.showDialogError(ValidatePinConfig.messages.generic);
-      },
-      complete: () => this.loaderService.hide()
+    this.migrationService.accountEvaluate({documentClient: documentClient}).subscribe({
+      next: ()=> {
+        this.PinService.generatePin(param).subscribe({ error : () => {} });
+      },error: () =>{
+        this.showMessage('Se ha presentado un error al hacer la consulta, por favor intenta nuevamente');
+      }
     });
   }
 
   migrate(){
     this.loaderService.show();
-    const { min, iccid } = this.contactInfo;
+    const { min, iccid, min_b } = this.contactInfo;
     const data = {
       min,
       iccidNew: iccid,
-      codeDesactivation: "381",
-      codeChangeIccid: 9,
-      descriptionChangeIccid: "Repo Voluntaria (Sin Costo)",
+      min_b
     };
     this.migrationService.migrate(data).subscribe({
-      next: response => {
-        console.warn(response);
-        this.showSuccessDialog();
+      next: res => {
+        console.warn(res.response);
+        if(res.error === 0){
+          this.showSuccessDialog();
+        }else{
+          this.showDialogError(res.response.description);
+          this.pinForm.reset();
+        }        
       },
       error: () => {
         this.loaderService.hide();
-        this.showDialogError(ValidatePinConfig.messages.generic);
+        this.showDialogError(ValidatePinConfig.messages.iccidChangeError);
+        this.pinForm.reset();
       },
       complete: () => this.loaderService.hide()
     })
@@ -136,9 +179,9 @@ export class ValidatePinComponent {
 
   showSuccessGeneratePinDialog(){
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "simok",
-      message: `<span>Pin Generado satisfactoriamente</span>`,
-      content: `Pin Generado`,
+      icon: "check",
+      message: ' ',
+      content: 'Pin Generado satisfactoriamente',
       actions: [
         {
           key: DialogButton.CONFIRM,
@@ -155,38 +198,36 @@ export class ValidatePinComponent {
     });
   }
 
-  validatePin(){
+  validatePin(pin: any){
     this.loaderService.show();
-    const form = this.pinForm.getRawValue();
-    const pinNumber = Object.values(form).join('');
-    const { documentClient } = this.contactInfo;
+    const pinNumber = Object.values(pin.digits).join('');
+  
+      const { documentClient } = this.contactInfo;
 
-    const param = {
-      documentClient,
-      pinNumber
-    };
-
-    this.PinService.validatePin(param).subscribe({
-      next: response => {
-        if(response.error === ValidatePinStatus.SUCCESS){
-          this.migrate();
-          return;
-        }
-        this.showIncorrectPinDialog();
-      },
-      error : () => {
-        this.loaderService.hide();
-        this.showIncorrectPinDialog();
-      },
-      complete: () => this.loaderService.hide()
-    });
-
+      const param = {
+        documentClient,
+        pinNumber
+      };
+      this.PinService.validatePin(param).subscribe({
+        next: res => {
+          if(res.error === ValidatePinStatus.SUCCESS){
+            this.migrate();
+            return;
+          }
+          this.showIncorrectPinDialog(res.response.description);
+        },
+        error : (err) => {
+          this.loaderService.hide();
+          this.showIncorrectPinDialog( err );
+        },
+        complete: () => this.loaderService.hide()
+      });
   }
 
   showDialogError(content: string){
     this.loaderService.hide();
     const dialogInstance = this.showMessage<ModalDialogConfig>({
-      icon: "check",
+      icon: "warn",
       message: `Error`,
       content,
       actions: ValidatePinConfig.modals.genericError.actions
@@ -204,7 +245,7 @@ export class ValidatePinComponent {
 
   showMessage<T>(info: T){
     return this.dialog.open(DialogComponent, {
-      width: '350px',
+      width: '400px',
       disableClose: true,
       data: info
     });

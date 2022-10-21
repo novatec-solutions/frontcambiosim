@@ -6,3 +6,8 @@ export interface PlanResource {
   identificationNumber: string;
   identificationType: DocumentTypeNumber;
 }
+
+export interface PlanResourceResponse {
+  error?: number,
+  response: PlanResource
+}

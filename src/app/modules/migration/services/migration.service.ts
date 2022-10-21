@@ -8,9 +8,9 @@ import { AccountContact } from '../interfaces/account-contact.model';
 import { AccountEvaluate } from '../interfaces/account-evaluate.model';
 import { CustomerInfo } from '../interfaces/customer-info.model';
 import { MigrateAccount } from '../interfaces/migrate.model';
-import { MigrationData } from '../interfaces/migration-data.model';
-import { PlanResource } from '../interfaces/plan-resource.model';
-import { ValidacionCuenta } from '../interfaces/validacion-cuenta.model';
+import { MigrationData, MigrationDataResponse } from '../interfaces/migration-data.model';
+import { PlanResource, PlanResourceResponse } from '../interfaces/plan-resource.model';
+import { ValidacionCuenta, ValidacionCuentaResponse } from '../interfaces/validacion-cuenta.model';
 import { ValidateInfo } from '../interfaces/validate-info.model';
 import { ValidatePlanModel } from '../interfaces/validate-plan.model';
 
@@ -26,21 +26,21 @@ export class MigrationService {
   }
 
   @SimpleLog(LogType.VERBOSE)
-  validarCuenta( data: ValidateInfo ): Observable<ValidacionCuenta> {
+  validarCuenta( data: ValidateInfo ): Observable<ValidacionCuentaResponse> {
     const url = this.baseUrl + "validar/informacion";
-    return this.http.post<ValidacionCuenta>(url, data);
+    return this.http.post<ValidacionCuentaResponse>(url, data);
   }
 
   @SimpleLog(LogType.VERBOSE)
-  validatePlanSimResource( data: ValidatePlanModel ): Observable<PlanResource> {
+  validatePlanSimResource( data: ValidatePlanModel ): Observable<PlanResourceResponse> {
     const url = this.baseUrl + "validar/plan";
-    return this.http.post<PlanResource>(url, data);
+    return this.http.post<PlanResourceResponse>(url, data);
   }
 
   @SimpleLog(LogType.VERBOSE)
-  getCustomerInfoResource( data: CustomerInfo ): Observable<PlanResource> {
+  getCustomerInfoResource( data: CustomerInfo ): Observable<PlanResourceResponse> {
     const url = this.baseUrl + "validar/linea";
-    return this.http.post<PlanResource>(url, data);
+    return this.http.post<PlanResourceResponse>(url, data);
   }
 
   @SimpleLog(LogType.VERBOSE)
@@ -50,9 +50,9 @@ export class MigrationService {
   }
 
   @SimpleLog(LogType.VERBOSE)
-  migrate( data: MigrateAccount ): Observable<MigrationData> {
+  migrate( data: MigrateAccount ): Observable<MigrationDataResponse> {
     const url = this.baseUrl + "cuenta/migrar";
-    return this.http.post<MigrationData>(url, data);
+    return this.http.post<MigrationDataResponse>(url, data);
   }
 
 }

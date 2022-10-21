@@ -18,5 +18,6 @@ export const ValidatePinConfig = Object.freeze({
   messages: {
     generic: "Ha ocurrido un error, por favor intenta nuevamente.",
     generatePinError : "Ha ocurrido un error al general el pin, por favor intente nuevamente",
+    iccidChangeError : "Error al realizar cambio de ICCID"
   }
 });

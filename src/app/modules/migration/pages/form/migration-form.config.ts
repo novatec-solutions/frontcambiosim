@@ -64,7 +64,8 @@ export const MigrationFormConfig = Object.freeze({
   },
   messages: {
     IccdStatusError : "El serial ingresa presenta un estado que no permite migrar",
-    generic: "Ha ocurrido un error al validar la cuenta, por favor intenta nuevamente."
+    generic: "Ha ocurrido un error al validar la cuenta, por favor intenta nuevamente.",
+    errorChange: "No aplica para realizar el cambio de sim card"
   },
   routes: {
     pinGenerate: '/pin/generate',

@@ -6,7 +6,12 @@
       .app-button {
         width: 48%;
       }
-    }
+    } 
+  }
+  .choose-line__list{
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 1.4rem;
   }
 }
 
@@ -20,5 +25,11 @@
         margin-bottom: 10px;
       }
     }
+  }
+  .choose-line__list{
+    display: flex;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.4rem;
+    flex-direction: column;
   }
 }

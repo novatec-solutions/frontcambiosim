@@ -1,6 +1,7 @@
 export enum IccidStatus {
-  ASSIGNED      = 'a',
-  FREE          = 'f',
-  DEACTIVATED   = 'd',
-  SUSPENDED     = 's',
+  ASSIGNED      = 'Activo',
+  FREE          = 'Free',
+  LIBRE         = 'Libre',
+  DEACTIVATED   = 'Desactivado',
+  RESERVED     = 'Reservado',
 }

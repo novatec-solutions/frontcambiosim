@@ -8,4 +8,5 @@ export interface GenerarPin {
   min?: string;
   iccid?: string;
   min_b?: string;
+  method?: string;
 }

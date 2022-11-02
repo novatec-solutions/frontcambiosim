@@ -185,15 +185,15 @@ export class MigrationFormComponent {
           this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
             state: {
               info: accountContacts.response,
+              method: accountContacts.method,
               documentData,
               min,
               iccid
             }
           });
-        }
-        if(accountContacts.error === 1){         
-          this.showDialogError(accountContacts.response.description);
-        }
+          return;
+        }      
+        this.showDialogError(accountContacts.response.description);
       },
       error: (error) => {
         this.showDialogError(error.message)
@@ -225,21 +225,20 @@ export class MigrationFormComponent {
       mergeMap( item => this.migrationService.accountEvaluate(item) ),
     ).subscribe( {
       next: accountContacts => {
-        if(accountContacts.response){
+        if(accountContacts.error === 0){
           this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
             state: {
               info: accountContacts.response,
+              method: accountContacts.method,
               documentData,
               min,
               min_b,
               iccid
             } 
           });
+          return;
         }
-
-        if(accountContacts.error === 1){    
-          this.showDialogError(accountContacts.response.description);
-        }
+        this.showDialogError(accountContacts.response.description);
       },
       error: (error) => {
         this.showDialogError(error.message)

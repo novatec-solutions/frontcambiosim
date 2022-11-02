@@ -66,6 +66,7 @@ export class GeneratePinComponent {
     this.router.navigate(['/pin/validate'], {
       state: {
         ...data,
+        method: this.contactInfo.method,
         mask: this.maskLine(contact, type),
         min: this.contactInfo.min,
         iccid: this.contactInfo.iccid,

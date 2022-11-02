@@ -131,20 +131,28 @@ export class ValidatePinComponent implements OnInit {
   }
 
   generateNewPin(){
-    this.showSuccessGeneratePinDialog();
+    this.loaderService.show();
     this.pinForm.reset({digits: this.fb.array([])});
     this.invalidPin = true;
     const { documentClient } = this.contactInfo;
-
-    
 
     const param = {
       ...this.contactInfo
     };
     this.migrationService.accountEvaluate({documentClient: documentClient}).subscribe({
-      next: ()=> {
-        this.PinService.generatePin(param).subscribe({ error : () => {} });
-      },error: () =>{
+      next: (res)=> {
+        if( res.error === ValidatePinStatus.SUCCESS ){
+          this.showSuccessGeneratePinDialog();
+          this.PinService.generatePin(param).subscribe({ error : () => {} });
+          return;
+        }  
+        
+        this.showDialogError(res.response.description);
+        
+      },
+      complete: () => this.loaderService.hide(),
+      error: () =>{
+        this.loaderService.hide();
         this.showMessage('Se ha presentado un error al hacer la consulta, por favor intenta nuevamente');
       }
     });
@@ -161,7 +169,7 @@ export class ValidatePinComponent implements OnInit {
     this.migrationService.migrate(data).subscribe({
       next: res => {
         console.warn(res.response);
-        if(res.error === 0){
+        if(res.error === ValidatePinStatus.SUCCESS){
           this.showSuccessDialog();
         }else{
           this.showDialogError(res.response.description);
@@ -206,7 +214,8 @@ export class ValidatePinComponent implements OnInit {
 
       const param = {
         documentClient,
-        pinNumber
+        pinNumber,
+        method: this.contactInfo.method
       };
       this.PinService.validatePin(param).subscribe({
         next: res => {
@@ -218,7 +227,7 @@ export class ValidatePinComponent implements OnInit {
         },
         error : (err) => {
           this.loaderService.hide();
-          this.showIncorrectPinDialog( err );
+          this.showDialogError( err );
         },
         complete: () => this.loaderService.hide()
       });

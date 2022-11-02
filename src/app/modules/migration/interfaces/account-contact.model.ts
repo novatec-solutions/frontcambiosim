@@ -7,6 +7,7 @@ export interface AccountContactInfo {
 
 export interface AccountContact {
   error?: number;
+  method?: string;
   response: {
     description: string,
     data: Array<AccountContactInfo>
@@ -15,6 +16,7 @@ export interface AccountContact {
 
 export interface AccountContactExtras {
   info: Array<AccountContactInfo>;
+  method?: string;
   documentData: string;
   min?: string;
   iccid?: string;

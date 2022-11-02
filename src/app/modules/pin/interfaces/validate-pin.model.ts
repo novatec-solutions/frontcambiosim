@@ -6,6 +6,7 @@ export enum ValidatePinStatus {
 export interface ValidatePin {
   documentClient: string;
   pinNumber: string;
+  method?: string;
 }
 
 export interface ValidatePinResponse {

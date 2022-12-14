@@ -1,7 +1,7 @@
 $white: #ffffff;
 $black: #000;
 $main-background-color: #fafafa;
-$font-family: Roboto;
+$font-family: 'AMX Claro';
 $red: #d9291c;
 $blue: #187385;
 $green: #0bb07b;
@@ -18,4 +18,52 @@ $gray-border: #cccccc;
     width: $size;
     height: $size;
   }
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-Regular.woff2') format('woff2'),
+    url('../fonts/AMX-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-Bold.woff2') format('woff2'),
+    url('../fonts/AMX-Bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-Light.woff2') format('woff2'),
+    url('../fonts/AMX-Light.woff') format('woff');
+  font-weight: lighter;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-BoldItalic.woff2') format('woff2'),
+    url('../fonts/AMX-BoldItalic.woff') format('woff');
+  font-weight: bold;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-Italic.woff2') format('woff2'),
+    url('../fonts/AMX-Italic.woff') format('woff');
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'AMX Claro';
+  src: url('../fonts/AMX-LightItalic.woff2') format('woff2'),
+    url('../fonts/AMX-LightItalic.woff') format('woff');
+  font-weight: lighter;
+  font-style: italic;
 }

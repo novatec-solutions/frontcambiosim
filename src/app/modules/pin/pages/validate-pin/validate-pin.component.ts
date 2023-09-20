@@ -168,7 +168,6 @@ export class ValidatePinComponent implements OnInit {
     };
     this.migrationService.migrate(data).subscribe({
       next: res => {
-        console.warn(res.response);
         if(res.error === ValidatePinStatus.SUCCESS){
           this.showSuccessDialog();
         }else{

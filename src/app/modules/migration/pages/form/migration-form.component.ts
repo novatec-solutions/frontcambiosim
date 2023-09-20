@@ -8,8 +8,7 @@ import { ModalDialogConfig } from 'src/app/core/interfaces/modal.config';
 import { DialogComponent } from 'src/app/core/organisms/dialog/dialog.component';
 import { LoadingService } from 'src/app/core/services/loading.service';
 import { DialogButton } from '../../../../core/enums/dialog-button.enum';
-import { IccidStatus } from '../../enums/iccid-status.enum';
-import { ValidacionCuenta, ValidacionCuentaResponse } from '../../interfaces/validacion-cuenta.model';
+import { ValidacionCuentaResponse } from '../../interfaces/validacion-cuenta.model';
 import { ValidatePlanModel } from '../../interfaces/validate-plan.model';
 import { mapDocumentType } from '../../mapper/document-type.mapper';
 import { MigrationService } from '../../services/migration.service';
@@ -115,7 +114,7 @@ export class MigrationFormComponent {
         this.migrationService.validarCuenta({ min, iccid }).subscribe({
           next: (res: ValidacionCuentaResponse) => {
             if(res.error === 0){
-              this.processValidationStates(res.response);
+              this.processValidationAssignedState();
             }else{
               this.showDialogError(res.response.description);
             }  
@@ -127,19 +126,6 @@ export class MigrationFormComponent {
       }
       dialogInstance.close();
     });
-  }
-
-  processValidationStates(response: ValidacionCuenta){
-    if( response.iccidStatus === IccidStatus.ASSIGNED || 
-      response.iccidStatus === IccidStatus.RESERVED){
-      this.processValidationAssignedState();
-    } else if(
-      response.iccidStatus === IccidStatus.FREE ||
-      response.iccidStatus === IccidStatus.DEACTIVATED ||
-      response.iccidStatus === IccidStatus.LIBRE ){
-      // this.processValidationFreeState();
-      this.processValidationAssignedState();
-    }
   }
 
   showDialogError(content: string){
@@ -158,47 +144,6 @@ export class MigrationFormComponent {
       if(buttonKey === DialogButton.CANCEL){
         dialogInstance.close();
       }
-    });
-  }
-
-  processValidationFreeState(){
-    let documentData = "";
-    const {
-      currentPhoneNumber: min,
-      serialSimlastNumbers: iccid,
-    } = this.formRawValue;
-
-    this.migrationService.getCustomerInfoResource({ min }).pipe(
-      tap( () => this.loaderService.show() ),
-      map( res => {
-        if(res.error === 1){         
-          throw new Error(res.response.description);
-        }
-        return res.response;     
-      }),
-      map( item => mapDocumentType(item) ),
-      tap( ({ documentClient }) => documentData = documentClient),
-      mergeMap( item => this.migrationService.accountEvaluate(item) ),
-    ).subscribe( {
-      next: accountContacts => {  
-        if(accountContacts.error === 0){
-          this.router.navigate([ MigrationFormConfig.routes.pinGenerate ], {
-            state: {
-              info: accountContacts.response,
-              method: accountContacts.method,
-              documentData,
-              min,
-              iccid
-            }
-          });
-          return;
-        }      
-        this.showDialogError(accountContacts.response.description);
-      },
-      error: (error) => {
-        this.showDialogError(error.message)
-      },
-      complete: () => this.loaderService.hide()
     });
   }
 

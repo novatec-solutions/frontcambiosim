@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  url: "http://simcard-back-miclaro-dev-novatec.104.209.147.150.nip.io/",
+  url: "http://localhost:3000/",
   iv: 'abcdef9876543210abcdef9876543210',
   secretKey: '0123456789abcdef0123456789abcdef'
 };
